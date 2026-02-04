@@ -1,0 +1,208 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Job Scraper Dashboard</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+        .header {
+            background: white;
+            padding: 30px;
+            border-radius: 10px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+            margin-bottom: 20px;
+        }
+        h1 {
+            color: #333;
+            margin-bottom: 10px;
+        }
+        .subtitle {
+            color: #666;
+        }
+        .cards {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 20px;
+            margin-bottom: 20px;
+        }
+        .card {
+            background: white;
+            padding: 25px;
+            border-radius: 10px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+        }
+        .card h2 {
+            color: #667eea;
+            margin-bottom: 15px;
+            font-size: 1.2em;
+        }
+        .stat {
+            font-size: 2.5em;
+            font-weight: bold;
+            color: #333;
+            margin: 10px 0;
+        }
+        .btn {
+            background: #667eea;
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 1em;
+            transition: background 0.3s;
+        }
+        .btn:hover {
+            background: #5568d3;
+        }
+        .links {
+            display: flex;
+            gap: 15px;
+            flex-wrap: wrap;
+        }
+        .link {
+            color: #667eea;
+            text-decoration: none;
+            font-weight: 500;
+        }
+        .link:hover {
+            text-decoration: underline;
+        }
+        #stats-display {
+            margin-top: 15px;
+        }
+        .loading {
+            color: #666;
+            font-style: italic;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🔍 Job Scraper Dashboard</h1>
+            <p class="subtitle">Automated tech job listings collection and analysis</p>
+        </div>
+
+        <div class="cards">
+            <div class="card">
+                <h2>📊 Statistics</h2>
+                <div id="stats-display">
+                    <p class="loading">Click "Load Stats" to view statistics</p>
+                </div>
+                <button class="btn" onclick="loadStats()">Load Stats</button>
+            </div>
+
+            <div class="card">
+                <h2>🤖 Scraper Control</h2>
+                <p style="margin-bottom: 15px;">Manually trigger job scraping</p>
+                <button class="btn" onclick="runScraper()">Run Scraper Now</button>
+                <div id="scraper-status" style="margin-top: 15px;"></div>
+            </div>
+
+            <div class="card">
+                <h2>📚 API Documentation</h2>
+                <div class="links">
+                    <a href="/docs" class="link" target="_blank">Swagger UI →</a>
+                    <a href="/redoc" class="link" target="_blank">ReDoc →</a>
+                </div>
+                <p style="margin-top: 15px; color: #666;">
+                    Explore the API endpoints and test them interactively
+                </p>
+            </div>
+        </div>
+
+        <div class="card">
+            <h2>📋 Recent Jobs</h2>
+            <div id="jobs-list">
+                <p class="loading">Click "Load Jobs" to view recent listings</p>
+            </div>
+            <button class="btn" onclick="loadJobs()" style="margin-top: 15px;">Load Jobs</button>
+        </div>
+    </div>
+
+    <script>
+        async function loadStats() {
+            const display = document.getElementById('stats-display');
+            display.innerHTML = '<p class="loading">Loading...</p>';
+            
+            try {
+                const response = await fetch('/api/v1/jobs/stats');
+                const data = await response.json();
+                
+                display.innerHTML = `
+                    <p><strong>Total Jobs:</strong> ${data.total_jobs}</p>
+                    <p><strong>Active Jobs:</strong> ${data.active_jobs}</p>
+                    <p><strong>Companies:</strong> ${data.companies_count}</p>
+                    <p><strong>Avg Salary:</strong> ${data.avg_salary ? '$' + data.avg_salary.toFixed(0) : 'N/A'}</p>
+                `;
+            } catch (error) {
+                display.innerHTML = '<p style="color: red;">Error loading stats</p>';
+            }
+        }
+
+        async function runScraper() {
+            const status = document.getElementById('scraper-status');
+            status.innerHTML = '<p class="loading">Starting scraper...</p>';
+            
+            try {
+                const response = await fetch('/api/v1/scraper/run', { method: 'POST' });
+                const data = await response.json();
+                
+                status.innerHTML = `<p style="color: green;">✓ ${data.message}</p>`;
+                
+                setTimeout(() => {
+                    status.innerHTML = '';
+                }, 5000);
+            } catch (error) {
+                status.innerHTML = '<p style="color: red;">Error starting scraper</p>';
+            }
+        }
+
+        async function loadJobs() {
+            const list = document.getElementById('jobs-list');
+            list.innerHTML = '<p class="loading">Loading...</p>';
+            
+            try {
+                const response = await fetch('/api/v1/jobs/?limit=10');
+                const jobs = await response.json();
+                
+                if (jobs.length === 0) {
+                    list.innerHTML = '<p>No jobs found. Run the scraper to collect data.</p>';
+                    return;
+                }
+                
+                list.innerHTML = jobs.map(job => `
+                    <div style="border-bottom: 1px solid #eee; padding: 15px 0;">
+                        <h3 style="color: #333; margin-bottom: 5px;">${job.title}</h3>
+                        <p style="color: #666; margin-bottom: 5px;">
+                            <strong>${job.company}</strong> • ${job.location || 'Location not specified'}
+                        </p>
+                        <p style="color: #888; font-size: 0.9em;">
+                            ${job.job_type || 'N/A'} • ${job.experience_level || 'N/A'}
+                        </p>
+                        ${job.salary_min && job.salary_max ? 
+                            `<p style="color: #667eea; font-weight: bold;">
+                                $${job.salary_min.toLocaleString()} - $${job.salary_max.toLocaleString()}
+                            </p>` : ''
+                        }
+                    </div>
+                `).join('');
+            } catch (error) {
+                list.innerHTML = '<p style="color: red;">Error loading jobs</p>';
+            }
+        }
+    </script>
+</body>
+</html>
