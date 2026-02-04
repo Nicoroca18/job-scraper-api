@@ -219,8 +219,6 @@ docker-compose logs -f app
 - [ ] Add authentication for scraper endpoints
 - [ ] Configure CORS properly
 
-## Interview Talking Points
-
 ### Web Scraping
 - **BeautifulSoup vs Selenium**: When to use each
 - **Rate Limiting**: Exponential backoff strategy
