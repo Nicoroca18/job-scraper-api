@@ -160,14 +160,6 @@ self.scrapers = [
 - ✅ **Error Handling** - Graceful failure recovery
 - ✅ **Duplicate Detection** - Avoid storing duplicates
 
-### Legal Considerations
-
-- Read and respect `robots.txt`
-- Follow website Terms of Service
-- Don't overload servers (use delays)
-- Only scrape publicly available data
-- For educational purposes
-
 ## Configuration
 
 Environment variables (`.env`):
